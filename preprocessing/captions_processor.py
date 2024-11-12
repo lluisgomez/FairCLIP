@@ -1,99 +1,113 @@
-import argparse
+import os
+import tarfile
+import json
 import requests
 import time
-import json
-from concurrent.futures import ThreadPoolExecutor, as_completed
+import argparse
 from tqdm import tqdm
+from concurrent.futures import ThreadPoolExecutor, as_completed, TimeoutError
 
-# Function to send a single request to a specified URL with a specific prompt
-def send_request(url, prompt, model_name):
+# Parse command-line arguments
+parser = argparse.ArgumentParser(description="Process prompts for multiple ollama model instances.")
+parser.add_argument("--input", type=str, required=True, help="Path to folder with shard tar files.")
+parser.add_argument("--output", type=str, required=True, help="Path to output folder where JSON files with results will be saved.")
+parser.add_argument("--num_threads", type=int, default=20, help="Number of concurrent threads.")
+parser.add_argument("--ports", type=str, default="11434,11435,11436,11437", help="Comma-separated list of ports for ollama instances.")
+parser.add_argument("--model_name", type=str, default="person_tagger", help="Name of the ollama model.")
+parser.add_argument("--timeout", type=int, default=10, help="Timeout for each request in seconds.")
+args = parser.parse_args()
+
+# Set up the URLs for each model instance using specified ports
+ports = args.ports.split(',')
+urls = [f"http://localhost:{port}/api/chat" for port in ports]
+
+# Set headers and model-specific data
+headers = {"Content-Type": "application/json"}
+model_name = args.model_name
+
+# Function to send a single request to a specified URL
+def send_request(url, prompt):
     data = {
         "model": model_name,
         "messages": [
-            {
-              "role": "user",
-              "content": prompt
-            }
+            {"role": "user", "content": prompt}
         ],
         "stream": False
     }
-    response = requests.post(url, headers={'Content-Type': 'application/json'}, json=data)
-    response_time = response.elapsed.total_seconds()  # Get response time
+    response = requests.post(url, headers=headers, json=data, timeout=args.timeout)
+    response_time = response.elapsed.total_seconds()
     output_content = response.json().get('message', {}).get('content', '')
     return output_content, response_time
 
-# Function to process all prompts with multiple instances and update progress
-def process_prompts(prompts_dict, urls, model_name, num_threads):
-    start_time = time.time()
+# Process each shard directly from the tarfile
+def process_shard(file_path, output_folder, num_threads):
+    # Print the name of the shard being processed
+    shard_name = os.path.basename(file_path)
+    print(f"Processing shard: {shard_name}")
+
     outputs = {}
+    start_time = time.time()  # Start timer for RPS calculation
 
-    # Initialize tqdm progress bar with total number of prompts
-    progress_bar = tqdm(total=len(prompts_dict), desc="Processing prompts", unit="prompt")
+    # Open the tar file and process each .txt file immediately
+    with tarfile.open(file_path, "r") as tar:
+        # Set leave=True to keep the progress bar after completion for diagnostic visibility
+        with tqdm(total=10000, desc=f"Processing {shard_name}", unit="file", leave=True) as progress_bar:
+            with ThreadPoolExecutor(max_workers=num_threads) as executor:
+                futures = {}
+                for member in tar:
+                    if member.isfile() and member.name.endswith(".txt"):
+                        file = tar.extractfile(member)
+                        if file:
+                            prompt = file.read().decode("utf-8").strip()
+                            url = urls[len(futures) % len(urls)]  # Round-robin URL selection
+                            future = executor.submit(send_request, url, prompt)
+                            futures[future] = member.name
 
-    with ThreadPoolExecutor(max_workers=num_threads) as executor:
-        # Round-robin distribute requests across URLs and collect futures
-        futures = {
-            executor.submit(send_request, urls[i % len(urls)], prompt, model_name): id 
-            for i, (id, prompt) in enumerate(prompts_dict.items())
-        }
+                # Collect results as they complete
+                for future in as_completed(futures):
+                    file_name = futures[future]
+                    try:
+                        output, response_time = future.result(timeout=args.timeout)
+                        if '***' in output:
+                            outputs[file_name] = output
+                        #print(f"Processed {file_name}: Time Taken {response_time:.2f} seconds")
+                    except TimeoutError:
+                        #print(f"Timeout for {file_name}. Skipping.")
+                        outputs[file_name] = "Timeout"  # Mark timeout in the output
+                    except Exception as e:
+                        #print(f"Error processing {file_name}: {e}")
+                        outputs[file_name] = str(e)  # Mark other errors in the output
+                    
+                    # Update the progress bar only after a request completes
+                    progress_bar.update(1)
 
-        # Process each completed future
-        for future in as_completed(futures):
-            id = futures[future]
-            output, response_time = future.result()
-            outputs[id] = output
+                    # Update RPS in progress bar description
+                    elapsed_time = time.time() - start_time
+                    rps = progress_bar.n / elapsed_time if elapsed_time > 0 else 0
+                    progress_bar.set_postfix(RPS=f"{rps:.2f}")
 
-            # Update the progress bar
-            progress_bar.update(1)
-            elapsed_time = time.time() - start_time
-            remaining = len(prompts_dict) - progress_bar.n
-            avg_rps = progress_bar.n / elapsed_time if elapsed_time > 0 else 0
-            progress_bar.set_postfix(remaining=remaining, avg_rps=f"{avg_rps:.2f}")
+            # Cancel any remaining incomplete futures (if any)
+            for future in futures:
+                if not future.done():
+                    future.cancel()
+                    print(f"Canceled pending future for {futures[future]}")
 
-    # Close the progress bar
-    progress_bar.close()
-
-    # Calculate throughput
-    total_time = time.time() - start_time
-    num_requests = len(prompts_dict)
-    avg_response_time = total_time / num_requests
-    throughput = num_requests / total_time
-
-    # Print summary
-    print(f"\nTotal Requests: {num_requests}")
-    print(f"Total Time: {total_time:.2f} seconds")
-    print(f"Average Response Time: {avg_response_time:.2f} seconds")
-    print(f"Throughput: {throughput:.2f} requests per second (RPS)")
-
-    return outputs
-
-# Main function to parse arguments and run the processing
-def main():
-    # Argument parser setup
-    parser = argparse.ArgumentParser(description="Process prompts for multiple ollama model instances.")
-    parser.add_argument("--input", type=str, default="prompts.json", help="Path to input JSON file with prompts.")
-    parser.add_argument("--output", type=str, default="output.json", help="Path to output JSON file for results.")
-    parser.add_argument("--num_threads", type=int, default=20, help="Number of concurrent threads.")
-    parser.add_argument("--ports", type=str, default="11434,11435,11436,11437", help="Comma-separated list of ports for ollama instances.")
-    parser.add_argument("--model_name", type=str, default="person_tagger", help="Name of the ollama model.")
-
-    args = parser.parse_args()
-
-    # Parse the list of ports
-    urls = [f"http://localhost:{port.strip()}/api/chat" for port in args.ports.split(",")]
-
-    # Load prompts from the input JSON file
-    with open(args.input, 'r') as f:
-        prompts_dict = json.load(f)
-
-    # Process prompts and capture results
-    outputs = process_prompts(prompts_dict, urls, args.model_name, args.num_threads)
-
-    # Save the results to the output JSON file
-    with open(args.output, 'w') as f:
+    # Save outputs to a JSON file named after the shard file
+    output_filename = shard_name.replace(".tar", ".json")
+    output_path = os.path.join(output_folder, output_filename)
+    with open(output_path, 'w') as f:
         json.dump(outputs, f, indent=4)
 
-# Run the main function
+# Main execution loop to process all shards in the input folder
 if __name__ == "__main__":
-    main()
+    # Ensure output directory exists
+    os.makedirs(args.output, exist_ok=True)
+    
+    # Get list of .tar files in the input folder and sort them alphabetically
+    tar_files = sorted([f for f in os.listdir(args.input) if f.endswith(".tar")])
+
+    # Process each shard in alphabetical order
+    for filename in tar_files:
+        file_path = os.path.join(args.input, filename)
+        process_shard(file_path, args.output, args.num_threads)
 
