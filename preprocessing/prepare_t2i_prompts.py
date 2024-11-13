@@ -37,10 +37,7 @@ def process_json(file_path, output_folder):
         if len(w1-w2)>1 or len(w2-w1)>1:
             continue
         
-        k1 = k.split('-')[0]+'-0'
-        k2 = k.split('-')[0]+'-1'
-        prompts[k1] = s1
-        prompts[k2] = s2
+        prompts[k.replace('.txt','')] = [s1, s2]
 
 
     output_filename = os.path.basename(file_path)
