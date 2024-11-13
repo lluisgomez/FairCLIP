@@ -23,7 +23,7 @@
 
 # Load necessary modules
 module purge
-module load oneapi hdf5 python
+module load oneapi hdf5 python/3.12.1
 
 # Activate the open_clip environment 
 source /gpfs/projects/ehpc42/sdxlturbo/bin/activate
