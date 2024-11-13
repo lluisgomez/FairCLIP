@@ -48,11 +48,11 @@ def generate_images(input_files, output_dir, batch_size=32):
             first_batch_captions = [pair[0] for pair in batch_caption_pairs]
             start_time = time.time()
             images_1 = pipe(prompt=first_batch_captions, num_inference_steps=1, guidance_scale=0.0, generator=[torch.manual_seed(seed) for seed in seeds], width=320, height=240).images
-            batch_time = time.time() - start_time
 
             # Second batch of captions (second caption of each pair), using the same seeds
             second_batch_captions = [pair[1] for pair in batch_caption_pairs]
             images_2 = pipe(prompt=second_batch_captions, num_inference_steps=1, guidance_scale=0.0, generator=[torch.manual_seed(seed) for seed in seeds], width=320, height=240).images
+            batch_time = time.time() - start_time
 
             # Save images with suffixes "_1" and "_2"
             for img_key, img1, img2 in zip(batch_keys, images_1, images_2):
