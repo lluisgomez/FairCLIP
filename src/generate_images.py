@@ -56,8 +56,8 @@ def generate_images(input_files, output_dir, batch_size=32):
 
             # Save images with suffixes "_1" and "_2"
             for img_key, img1, img2 in zip(batch_keys, images_1, images_2):
-                img1.save(os.path.join(file_output_dir, f"{img_key}_1.png"))
-                img2.save(os.path.join(file_output_dir, f"{img_key}_2.png"))
+                img1.save(os.path.join(file_output_dir, f"{img_key}_1.jpg"), format="JPEG", quality=90)
+                img2.save(os.path.join(file_output_dir, f"{img_key}_2.jpg"), format="JPEG", quality=90)
 
             # Update counters
             total_images += len(images_1) + len(images_2)
