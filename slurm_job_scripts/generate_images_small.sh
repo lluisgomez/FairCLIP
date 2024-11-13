@@ -44,5 +44,5 @@ for i in $(seq $START_INDEX $END_INDEX); do
 	done
 
 	# Run the Python script with batch size 32 and all files assigned to this task
-	srun --exclusive -N1 -n1 --gpus=1 python generate_images.py --input_files "${input_files[@]}" --output_dir "$OUTPUT_DIR" --batch_size 32
+	srun --exclusive -N1 -n1 --gpus=1 python /gpfs/projects/ehpc42/code/generate_images.py --input_files "${input_files[@]}" --output_dir "$OUTPUT_DIR" --batch_size 32
 
