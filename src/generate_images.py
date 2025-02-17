@@ -11,6 +11,7 @@ def generate_images(input_files, output_dir, batch_size=32):
     # Load the SDXL-Turbo model from the specified path
     model_path = "/gpfs/projects/ehpc42/sdxlturbo/models/models--stabilityai--sdxl-turbo/snapshots/71153311d3dbb46851df1931d3ca6e939de83304/"
     pipe = AutoPipelineForText2Image.from_pretrained(model_path, torch_dtype=torch.float16, variant="fp16")
+    #pipe = AutoPipelineForText2Image.from_pretrained("stabilityai/sdxl-turbo", torch_dtype=torch.float16, variant="fp16")
     pipe.set_progress_bar_config(disable=True)
     pipe.to("cuda")
 
@@ -47,11 +48,11 @@ def generate_images(input_files, output_dir, batch_size=32):
             # First batch of captions (first caption of each pair)
             first_batch_captions = [pair[0] for pair in batch_caption_pairs]
             start_time = time.time()
-            images_1 = pipe(prompt=first_batch_captions, num_inference_steps=1, guidance_scale=0.0, generator=[torch.manual_seed(seed) for seed in seeds], width=320, height=240).images
+            images_1 = pipe(prompt=first_batch_captions, num_inference_steps=2, guidance_scale=0.0, generator=[torch.manual_seed(seed) for seed in seeds], width=256, height=256).images
 
             # Second batch of captions (second caption of each pair), using the same seeds
             second_batch_captions = [pair[1] for pair in batch_caption_pairs]
-            images_2 = pipe(prompt=second_batch_captions, num_inference_steps=1, guidance_scale=0.0, generator=[torch.manual_seed(seed) for seed in seeds], width=320, height=240).images
+            images_2 = pipe(prompt=second_batch_captions, num_inference_steps=2, guidance_scale=0.0, generator=[torch.manual_seed(seed) for seed in seeds], width=256, height=256).images
             batch_time = time.time() - start_time
 
             # Save images with suffixes "_1" and "_2"
