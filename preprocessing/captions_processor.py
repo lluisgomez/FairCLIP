@@ -185,7 +185,7 @@ if __name__ == "__main__":
     for filename in tar_files:
         file_path = os.path.join(args.input, filename)
         log = process_shard(file_path, args.output, args.num_threads)
-        logs[filename] = logs
+        logs[filename] = log
 
     with open('captions_processor.log', 'w') as f:
         json.dump(logs,f)
