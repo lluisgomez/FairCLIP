@@ -1,4 +1,4 @@
-import os
+import os, glob
 import random
 import json
 import requests
@@ -42,7 +42,7 @@ def contains_person(sentence):
 
 # Parse command-line arguments
 parser = argparse.ArgumentParser(description="Process prompts for multiple ollama model instances.")
-parser.add_argument("--input", type=str, required=True, help="Path to folder with extracted shard directories.")
+parser.add_argument("--input", type=str, required=True, help="Path to folder with JSON files with captions to be processed.")
 parser.add_argument("--output", type=str, required=True, help="Path to output folder where JSON files with results will be saved.")
 parser.add_argument("--num_threads", type=int, default=20, help="Number of concurrent threads.")
 parser.add_argument("--ports", type=str, default="11434,11435,11436,11437", help="Comma-separated list of ports for ollama instances.")
@@ -90,55 +90,41 @@ def send_request(url, prompt):
 
 
 
-def process_shard_folder(folder_path, output_folder, num_threads):
+def process_json(json_path, output_folder, num_threads):
     """
-    Process an extracted shard folder containing JSON files.
+    Process a JSON file with fileIDs as keys and captions as values.
     
-    For each JSON file, the function:
-      - Reads the file and extracts a caption.
-      - Checks if the sample has at least one face, if the caption is English,
-        and if it contains a PERSON entity.
+    For each sample in the JSON file, the function:
+      - Checks if the caption is English, and (optional) if it contains a PERSON entity.
       - Augments the caption by appending a random ethnicity and gender.
       - Submits the prompt to an ollama model via a threaded request.
       - Collects and saves responses into a JSON output file.
     """
-    shard_name = os.path.basename(folder_path)
+    shard_name = os.path.basename(json_path)
     print(f"Processing folder: {shard_name}")
 
     outputs = {}
-    log_info = {'total': 0, 'no_face': 0, 'no_english': 0, 'has_ne': 0, 'llm_processed': 0}
+    log_info = {'total': 0, 'no_english': 0, 'has_ne': 0, 'llm_processed': 0}
     start_time = time.time()
 
-    # List all JSON files in the folder
-    json_files = sorted([f for f in os.listdir(folder_path) if f.endswith(".json")])
-    total_files = len(json_files)
+    # read JSON file
+    with open(json_path) as f:
+        data = json.load(f)
+    total_captions = len(data)
 
-    with tqdm(total=total_files, desc=f"Processing {shard_name}", unit="file", leave=True) as progress_bar:
+    with tqdm(total=total_captions, desc=f"Processing {shard_name}", unit="file", leave=True) as progress_bar:
         with ThreadPoolExecutor(max_workers=num_threads) as executor:
             futures = {}
-            for filename in json_files:
-                file_path = os.path.join(folder_path, filename)
+            for filename in data.keys():
                 log_info['total'] += 1
-                try:
-                    with open(file_path, "r", encoding="utf-8") as f:
-                        data = json.load(f)
-                except Exception as e:
-                    print(f"Error reading {file_path}: {e}")
-                    update_progress(progress_bar, start_time)
-                    continue
-
-                prompt = data['caption'].replace("\n", " ")
-                if len(data.get('face_bboxes', [])) == 0:
-                    log_info['no_face'] += 1
-                    update_progress(progress_bar, start_time)
-                    continue
+                prompt = data[filename].replace("\n", " ")
                 if not is_english(prompt):
                     log_info['no_english'] += 1
                     update_progress(progress_bar, start_time)
                     continue
-                if contains_person(prompt):
-                    log_info['has_ne'] += 1
-                    # TODO handle samples with PERSON entities differently?
+                # TODO handle samples with PERSON entities differently?
+                #if contains_person(prompt):
+                #    log_info['has_ne'] += 1
                     # update_progress(progress_bar, start_time)
                     # continue
 
@@ -159,17 +145,6 @@ def process_shard_folder(folder_path, output_folder, num_threads):
                     # If the response is a single line, replace the initial prompt with the response.
                     if len(output.splitlines()) == 1:
                         outputs[file_name] = output
-                    # If the LLM has changed the caption replace it in the respective json and txt
-                    if not '@' in output:
-                        print('editing txt and json files')
-                        with open(os.path.join(folder_path, filename.replace('json','txt')), 'w') as f:
-                            f.write(output)
-                        with open(os.path.join(folder_path, filename)) as f:
-                            jdata = json.load(f)
-                        jdata['caption'] = output
-                        with open(os.path.join(folder_path, filename), 'w') as f:
-                            json.dump(fdata, f)
-
                 except TimeoutError:
                     print(f"Timeout for {file_name}. Skipping.")
                 except Exception as e:
@@ -201,15 +176,12 @@ if __name__ == "__main__":
     # Ensure output directory exists
     os.makedirs(args.output, exist_ok=True)
 
-    # List all subdirectories in the input folder (each representing an extracted shard)
-    shard_folders = sorted(
-        [d for d in os.listdir(args.input) if os.path.isdir(os.path.join(args.input, d))]
-    )
+    # List all json files in the input folder (each representing an extracted shard)
+    json_files = sorted(glob.glob(args.input+'/*json'))
     logs = {}
-    for folder in shard_folders:
-        folder_path = os.path.join(args.input, folder)
-        log = process_shard_folder(folder_path, args.output, args.num_threads)
-        logs[folder] = log
+    for json_file in json_files:
+        log = process_json(json_file, args.output, args.num_threads)
+        logs[json_file] = log
 
     # Save a log summary of processing
     with open('captions_processor.log', 'w', encoding="utf-8") as f:
