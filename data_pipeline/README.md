@@ -1,3 +1,15 @@
+A more efficient data pipeline:
+
+1) (in-cluster) untar all shards into a temporary folder
+2) (in-cluster) filter all samples and keep only those with at leat 1 face and Englsh captions
+3) (remotely) process captions from step 2 with an LLM and produce t2i prompts
+4) (in-cluster) generate images and edit captions (if necessary) directly in the temporary folder
+5) (in-cluster) tar all shards from the temp folder
+
+
+-----------------------
+
+
 ## 1) Extract all captions from original DataComp shards and process all captions with ollama model
 
 the `captions_processor.py' script assumes you have several ollama instances serving in different ports. you can configure the ollama ports and model via arguments:
