@@ -162,7 +162,7 @@ def process_shard_folder(folder_path, output_folder, num_threads):
                     # If the LLM has changed the caption replace it in the respective json and txt
                     if not '@' in output:
                         print('editing txt and json files')
-                        with open(os.path.join(folder_path, filename.replace('json','txt'), 'w') as f:
+                        with open(os.path.join(folder_path, filename.replace('json','txt')), 'w') as f:
                             f.write(output)
                         with open(os.path.join(folder_path, filename)) as f:
                             jdata = json.load(f)
