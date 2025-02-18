@@ -164,7 +164,7 @@ def process_json(json_path, output_folder, num_threads):
                 print(f"Canceled pending future for {futures[future]}")
 
     # Save outputs to a JSON file named after the shard folder
-    output_filename = f"{shard_name}.json"
+    output_filename = f"{shard_name}"
     output_path = os.path.join(output_folder, output_filename)
     with open(output_path, 'w', encoding="utf-8") as f:
         json.dump(outputs, f, indent=4)
