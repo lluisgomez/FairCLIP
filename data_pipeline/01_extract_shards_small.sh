@@ -16,7 +16,7 @@ find "$SRC_DIR" -maxdepth 1 -type f -name "*.tar" | while IFS= read -r tarfile; 
     start=$(date +%s)
 
     # Extract the tar archive into the target directory
-    tar xf "$tarfile" -C "$TARGET_DIR/$base"
+    tar xf "$tarfile" --no-same-permissions -C "$TARGET_DIR/$base"
 
     # Record the end time
     end=$(date +%s)
