@@ -1,8 +1,8 @@
 A more efficient data pipeline:
 
 1) (in-cluster) untar all shards into a temporary folder (see e.g. 01_extract_shards_small.sh)
-2) (remotely) filter all samples with at least 1 face detected and English caption. Then process captions from previous step with an LLM to produce t2i prompts
-4) (in-cluster) generate images with prompts from step 3 and edit captions (if necessary) directly in the temp folder
+2) (remotely) filter all samples with at least 1 face detected and English caption. Then process captions from previous step with an LLM to produce t2i prompts. If the LLM changes the caption edit/modify captions directly in the temp folder
+4) (in-cluster) generate images with prompts from step 3
 5) (in-cluster) tar all shards from the temp folder
 
 
