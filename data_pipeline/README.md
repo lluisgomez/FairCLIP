@@ -16,15 +16,9 @@ Approx time per step/scale:
 | 2    | 3500      | 0.25 h       |               |              |
 | 3    | 50        | 6.00 h       |               |              |
 | 4    | 128       | 1.00 h       |               |              |
-| 5    | 500       | 7.00 h ?     |               |              |
+| 5    | 500       | 2.00 h       |               |              |
 |------|-----------|--------------|---------------|--------------|
-|TOTAL |           | 16.25 h      |   ~162.50 h   |  ~1625.00 h  |
-
------------------------
-
-TODO:
-- faster resharding (step 5): instead of re-reading every file from disk in the temporary folder, we can open the original tar for reading and write out a new tar: (1) sequentially reading each file from the original tar, (2) writing the unmodified files directly from the original tar (thus saving some disk I/O), or from the updated files in a temp folder when available.
-- this implies that the generate_images script writes files into a new folder (not the same temp where original shard are extracted).
+|TOTAL |           | 11.25 h      |   ~112.50 h   |  ~1125.00 h  |
 
 -----------------------
 
@@ -64,10 +58,7 @@ python3 captions_processor.py --input /path/to/captions/ --output /path/to/promp
 generates a json file for each shard (e.g. json file prompts/00000000.json correspond to captions in 00000000.tar shard). Each json file is a dictionary with caption ID as key and the processed caption as value.
 
 ## 4) generate images with prompts from previous step
-script `../slurm_job_scripts/generate_images_small.sh` launches a SLURM srun command that calls python script `04_generate_images_multigpu.py`. It generates images using prompts from `/gpfs/scratch/ehpc42/datasets/datacomp/small_hybrid/prompts`
-
-TODO: save images into a different folder
+script `../slurm_job_scripts/generate_images_small.sh` launches a SLURM srun command that calls python script `04_generate_images_multigpu.py`. It generates images using prompts from `/gpfs/scratch/ehpc42/datasets/datacomp/small_hybrid/prompts` and saves generated images and edited json/txt files into a clean directory `/gpfs/scratch/ehpc42/datasets/datacomp/small_hybrid/edits`
 
 ## 5) rebuild shards with generated data
-TODO: modify script `05_reshard_small.sh` to create tar files faster by using sequential readings from the original tar files in `/gpfs/scratch/ehpc42/datasets/datacomp/small_filtered/shards`
-
+script `05_reshard_small.sh` calls python `reshard.py` to create tar files faster by using sequential readings from the original tar files in `/gpfs/scratch/ehpc42/datasets/datacomp/small_filtered/shards`, updating edited samples from `/gpfs/scratch/ehpc42/datasets/datacomp/small_hybrid/edits`. This produces a new set of shards with the hybrid dataset in `/gpfs/scratch/ehpc42/datasets/datacomp/small_hybrid/shards`
