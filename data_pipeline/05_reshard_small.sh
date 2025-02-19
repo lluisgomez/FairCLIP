@@ -10,5 +10,5 @@ find "$SRC_DIR" -mindepth 1 -maxdepth 1 -type d -print0 | while IFS= read -r -d 
     echo "Creating tar archive for: $base"
 
     # Create a tar file that contains only the contents of the shard directory.
-    tar cf "$DEST_DIR/$base.tar" -C "$shard" .
+    tar --sort=name -cf "$DEST_DIR/$base.tar" -C "$shard" .
 done
