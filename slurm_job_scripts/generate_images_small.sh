@@ -29,7 +29,8 @@ source /gpfs/projects/ehpc42/sdxlturbo/bin/activate
 
 # Define paths
 INPUT_DIR="/gpfs/scratch/ehpc42/datasets/datacomp/small_hybrid/prompts"
-OUTPUT_DIR="/gpfs/scratch/ehpc42/datasets/datacomp/small_hybrid/tmp"
+OUTPUT_DIR="/gpfs/scratch/ehpc42/datasets/datacomp/small_hybrid/edits"
+mkdir -p "$OUTPUT_DIR"
 
 # Run the Python script
 srun python /gpfs/projects/ehpc42/code/04_generate_images_multigpu.py --input_files "$INPUT_DIR" --output_dir "$OUTPUT_DIR" --batch_size 32
