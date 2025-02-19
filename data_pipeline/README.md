@@ -6,6 +6,19 @@ A more efficient data pipeline:
 4) (in-cluster) generate images with prompts from step 3 and edit/modify captions directly in the temp folder if needed.
 5) (in-cluster) tar all shards from the temp folder
 
+-----------------------
+
+Approx time per step/scale:
+
+| Step | Samples/s | Time (small) | Time (medium) | Time (large) |
+|------|-----------|--------------|---------------|--------------|
+| 1    | 500       | 2.00 h       |               |              |
+| 2    | 3500      | 0.25 h       |               |              |
+| 3    | 50        | 6.00 h       |               |              |
+| 4    | 128       | 1.00 h       |               |              |
+| 5    | 500       | 0.00 h       |               |              |
+|------|-----------|--------------|---------------|--------------|
+|TOTAL |           | 11.25 h      |   ~112.50 h   |  ~1125.00 h  |
 
 -----------------------
 
