@@ -22,10 +22,31 @@ Approx time per step/scale:
 
 -----------------------
 
+TODO:
+- faster resharding (step 5): instead of re-reading every file from disk in the temporary folder, we can open the original tar for reading and write out a new tar: (1) sequentially reading each file from the original tar, (2) writing the unmodified files directly from the original tar (thus saving some disk I/O), or from the updated files in a temp folder when available.
+- this implies that the generate_images script writes files into a new folder (not the same temp where original shard are extracted).
 
-## 1) Extract all captions from original DataComp shards and process all captions with ollama model
+-----------------------
 
-the `captions_processor.py' script assumes you have several ollama instances serving in different ports. you can configure the ollama ports and model via arguments:
+## 1) untar all shards into a temporary folder
+script `01_extract_shards_small.sh` extracts files from `SRC_DIR="/gpfs/scratch/ehpc42/datasets/datacomp/small_filtered/shards"`
+into `TARGET_DIR="/gpfs/scratch/ehpc42/datasets/datacomp/small_hybrid/tmp"`
+
+## 2) filter all samples with at least 1 face detected 
+script `02_filter_noface.sh` reads json files from `/gpfs/scratch/ehpc42/datasets/datacomp/small_hybrid/tmp` and process then with python script `filter_noface.py`. It creates a json file per shard (e.g. json file prompts/00000000.json correspond to captions in 00000000.tar shard) in `/gpfs/scratch/ehpc42/datasets/datacomp/small_hybrid/captions`, each file has a dictionary with filenames as keys and captions as values:
+
+```
+{
+    "000d6d31d370fcf64fcb4ce869c5ed96-0.json": "Jos Chessani medalla oro tokio 2020",
+    "0041c043f693222ade350169e6a4a663-0.json": "granizosaude1",
+    "0098ebd8027f13d12fb3d730f56bdafe-0.json": "HISENSE - Smart TV UHD 4K 65'' Vidaa Dolby Vision 65A6H",
+...
+}
+```
+## 3) filter samples with English caption and process captions with an LLM to produce t2i prompts.
+script `03_captions_processor.py` read json files from `/gpfs/scratch/ehpc42/datasets/datacomp/small_hybrid/captions` and creates files with same format in `/gpfs/scratch/ehpc42/datasets/datacomp/small_hybrid/prompts`. This files (one per shard) sonatain the modified captions that will be used to generate images in next step.
+
+the script `03_captions_processor.py' assumes you have several ollama instances serving in different ports. you can configure the ollama ports and model via arguments:
 
 * --input "Path to folder with shard tar files."
 * --output "Path to output folder where JSON files with results will be saved."
@@ -37,19 +58,16 @@ the `captions_processor.py' script assumes you have several ollama instances ser
 Calling the script:
 
 ```bash
-python3 captions_processor.py --input /path/to/shards/ --output output/
+python3 captions_processor.py --input /path/to/captions/ --output /path/to/prompts
 ```
 
-generates a json file for each shard (e.g. json file output/00000000.json correspond to captions in 00000000.tar shard). Each json file is a dictionary with caption ID as key and the processed caption as value, e.g.:
+generates a json file for each shard (e.g. json file prompts/00000000.json correspond to captions in 00000000.tar shard). Each json file is a dictionary with caption ID as key and the processed caption as value.
 
-```
-{
-    "64946f8713ed4685b3d8f0e0627b10ff-0.txt": "Men's navy printed silk satin shirt *** Women's navy printed silk satin shirt",
-    ...
-}
-```
+## 4) generate images with prompts from previous step
+script `../slurm_job_scripts/generate_images_small.sh` launches a SLURM srun command that calls python script `04_generate_images_multigpu.py`. It generates images using prompts from `/gpfs/scratch/ehpc42/datasets/datacomp/small_hybrid/prompts`
 
-## create prompts for image generation
+TODO: save images into a different folder
 
+## 5) rebuild shards with generated data
+TODO: modify script `05_reshard_small.sh` to create tar files faster by using sequential readings from the original tar files in `/gpfs/scratch/ehpc42/datasets/datacomp/small_filtered/shards`
 
-## rebuild shards with generated data
