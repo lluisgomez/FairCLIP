@@ -32,10 +32,14 @@ def compute_image_embeddings(dataset, model, preprocess, device):
     return torch.stack(embeddings)
 
 # Function to compute text embeddings (only once)
-def compute_text_embeddings(words, model, tokenizer, device):
+def compute_text_embeddings(words, word_categories, model, tokenizer, device):
     text_embeddings = {}
     for word in tqdm(words, desc="Computing text embeddings"):
-        text_input = tokenizer([word]).to(device)
+        if word_categories[word] == 'ADJECTIVE':
+            caption = f'a photo of a/an {word} person'
+        elif word_categories[word] == 'NOUN':
+            caption = f'a photo of a/an {word}'
+        text_input = tokenizer([caption]).to(device)
         with torch.no_grad():
             text_emb = model.encode_text(text_input)
             text_emb /= text_emb.norm(dim=-1, keepdim=True)
@@ -191,6 +195,8 @@ if __name__ == "__main__":
     # Load the So-B-IT taxonomy
     with open('./So-B-IT_taxonomy.json') as f:
         taxonomy = json.load(f)
+    with open('./So-B-IT_categories.json') as f:
+        word_categories = json.load(f)
     
     # Load the 'validation' split of FairFace with the '0.25' config (tighter face crop)
     # in the '1.25' config the crop is expanded by a factor of 1.25 rel. to the face bbox
@@ -216,7 +222,7 @@ if __name__ == "__main__":
     
     # Precompute image and text embeddings
     image_embeddings = compute_image_embeddings(dataset, model, preprocess, device)
-    text_embeddings = compute_text_embeddings([word for category in taxonomy.values() for word in category], model, tokenizer, device)
+    text_embeddings = compute_text_embeddings([word for category in taxonomy.values() for word in category], word_categories, model, tokenizer, device)
     
     # Evaluate normalized entropy
     race_results, gender_results, similarities = evaluate_normalized_entropy(image_embeddings, text_embeddings, dataset)
