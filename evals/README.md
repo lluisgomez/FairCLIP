@@ -1,9 +1,9 @@
 ## Implements fairness metrics from existing evaluation frameworks:
 
-- Kong at al. (2024). Mitigating test-time bias for fair image retrieval. NeurIPS 2024.
+- Hamidieh et al. (2024). Identifying implicit social biases in vision-language models. AAAI/ACM Conference on AI, Ethics, and Society 2024.
     - `eval_So-B-IT.py` Implements normalized entropy and Contrastive Attribute-Score (C-ASC) metrics for FairFace dataset.
       
-- Hamidieh et al. (2024). Identifying implicit social biases in vision-language models. AAAI/ACM Conference on AI, Ethics, and Society 2024.
+- Kong at al. (2024). Mitigating test-time bias for fair image retrieval. NeurIPS 2024.
     - `eval_coco_neutral.py` Implements Bias@K metric for COCO (similar to Table 2 of the paper)
     - `eval_flickr_neutral.py` Implements Bias@K metric for Flickr30K (similar to Table 2 of the paper)
       
