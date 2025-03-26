@@ -200,7 +200,7 @@ if __name__ == "__main__":
     
     # Load the 'validation' split of FairFace with the '0.25' config (tighter face crop)
     # in the '1.25' config the crop is expanded by a factor of 1.25 rel. to the face bbox
-    dataset = load_dataset('HuggingFaceM4/FairFace', '0.25', split='validation')
+    dataset = load_dataset('HuggingFaceM4/FairFace', data_dir='0.25', split='validation')
 
     # device setup
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
