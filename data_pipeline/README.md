@@ -62,5 +62,10 @@ generates a json file for each shard (e.g. json file prompts/00000000.json corre
 ## 4) generate images with prompts from previous step
 script `../slurm_job_scripts/generate_images_small.sh` launches a SLURM srun command that calls python script `04_generate_images_multigpu.py`. It generates images using prompts from `/gpfs/scratch/ehpc42/datasets/datacomp/small_hybrid/prompts` and saves generated images and edited json/txt files into a clean directory `/gpfs/scratch/ehpc42/datasets/datacomp/small_hybrid/edits`
 
+**TODO**: (observations after manual inspection of generated images in small scale) 
+
+ - SDXL-Turbo generates distorted/deformed faces. Consider FLUX-schnell (384x384 / 2steps) for better quality.
+ - Take care of Named Entities. 
+
 ## 5) rebuild shards with generated data
 script `05_reshard_small.sh` calls python `reshard.py` to create tar files faster by using sequential readings from the original tar files in `/gpfs/scratch/ehpc42/datasets/datacomp/small_filtered/shards`, updating edited samples from `/gpfs/scratch/ehpc42/datasets/datacomp/small_hybrid/edits`. This produces a new set of shards with the hybrid dataset in `/gpfs/scratch/ehpc42/datasets/datacomp/small_hybrid/shards`
