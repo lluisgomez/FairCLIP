@@ -12,7 +12,7 @@ Approx time per step/scale:
 
 | Step | Samples/s | Time (small) | Time (medium) | Time (large) |
 |------|-----------|--------------|---------------|--------------|
-| 1    | 500       | 2.00 h       |               |              |
+| 1    | 500       | 2.00 h       |               | 48h          |
 | 2    | 3500      | 0.25 h       |               |              |
 | 3    | 50        | 6.00 h       |               |              |
 | 4    | 128       | 1.00 h       |               |              |
@@ -25,6 +25,8 @@ Approx time per step/scale:
 ## 1) untar all shards into a temporary folder
 script `01_extract_shards_small.sh` extracts files from `SRC_DIR="/gpfs/scratch/ehpc42/datasets/datacomp/small_filtered/shards"`
 into `TARGET_DIR="/gpfs/scratch/ehpc42/datasets/datacomp/small_hybrid/tmp"`
+
+script `01_extract_shards_small.sh` uses xargs for parallel processing.
 
 ## 2) filter all samples with at least 1 face detected 
 script `02_filter_noface.sh` reads json files from `/gpfs/scratch/ehpc42/datasets/datacomp/small_hybrid/tmp` and process then with python script `filter_noface.py`. It creates a json file per shard (e.g. json file prompts/00000000.json correspond to captions in 00000000.tar shard) in `/gpfs/scratch/ehpc42/datasets/datacomp/small_hybrid/captions`, each file has a dictionary with filenames as keys and captions as values:
