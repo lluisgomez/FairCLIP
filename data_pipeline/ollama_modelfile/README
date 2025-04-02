@@ -16,8 +16,8 @@ Your long, shared prompt that is consistent across requests.
 To use this:
 
     Save it as a file (e.g. Modelfile)
-    ollama create choose-a-model-name -f <location of the file e.g. ./Modelfile>'
-    ollama run choose-a-model-name
+    ollama create tulu3:fairclip -f Modelfile3
+    ollama run tulu3:fairclip
     Start using the model!
 
 

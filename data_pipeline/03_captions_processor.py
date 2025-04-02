@@ -46,7 +46,7 @@ parser.add_argument("--input", type=str, required=True, help="Path to folder wit
 parser.add_argument("--output", type=str, required=True, help="Path to output folder where JSON files with results will be saved.")
 parser.add_argument("--num_threads", type=int, default=20, help="Number of concurrent threads.")
 parser.add_argument("--ports", type=str, default="11434,11435,11436,11437", help="Comma-separated list of ports for ollama instances.")
-parser.add_argument("--model_name", type=str, default="person_tagger", help="Name of the ollama model.")
+parser.add_argument("--model_name", type=str, default="tulu3:fairclip", help="Name of the ollama model.")
 parser.add_argument("--timeout", type=int, default=10, help="Timeout for each request in seconds.")
 args = parser.parse_args()
 

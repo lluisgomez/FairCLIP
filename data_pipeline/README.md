@@ -48,7 +48,7 @@ the script `03_captions_processor.py' assumes you have several ollama instances 
 * --output "Path to output folder where JSON files with results will be saved."
 * --num_threads "Number of concurrent threads." (default=20)
 * --ports "Comma-separated list of ports for ollama instances." (default="11434,11435,11436,11437")
-* --model_name "Name of the ollama model." (default="person_tagger")
+* --model_name "Name of the ollama model." (default="tulu3:fairclip")
 * --timeout type=int, "Timeout for each request in seconds." (default=10)
 
 Calling the script:
