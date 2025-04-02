@@ -65,7 +65,9 @@ script `../slurm_job_scripts/generate_images_small.sh` launches a SLURM srun com
 **TODO**: (observations after manual inspection of generated images in small scale) 
 
  - SDXL-Turbo generates distorted/deformed faces. Consider FLUX-schnell (384x384 / 2steps) for better quality.
- - Take care of Named Entities. 
+ - Take care of Named Entities. There are a lot (majority of images)
+ - Lots of false positives in DataComp face detection annotations.
+ - Caution: there might be a bug in step 3 that occasionally assigns wrong captions. E.g. "uid": "ea25e96a4ade488d756164c8def5a7c5" in 00000000.tar (small scale)
 
 ## 5) rebuild shards with generated data
 script `05_reshard_small.sh` calls python `reshard.py` to create tar files faster by using sequential readings from the original tar files in `/gpfs/scratch/ehpc42/datasets/datacomp/small_filtered/shards`, updating edited samples from `/gpfs/scratch/ehpc42/datasets/datacomp/small_hybrid/edits`. This produces a new set of shards with the hybrid dataset in `/gpfs/scratch/ehpc42/datasets/datacomp/small_hybrid/shards`
