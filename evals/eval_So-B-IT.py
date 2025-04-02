@@ -90,11 +90,11 @@ def evaluate_CASC(similarities, dataset, taxonomy):
     """
     For each category and for each word in that category, compute the C-ASC metric 
     for every demographic field and for every label within that field.
-    
+
     The C-ASC metric for a given word c and demographic label L in field F is defined as:
       C-ASC(c, L) = ( avg_sim(c, images with label L) - avg_sim(c, images without label L) )
                      / std(sim(c, all images) )
-    
+
     Returns a nested dictionary of the form:
     { 
        category: { 
@@ -197,7 +197,7 @@ if __name__ == "__main__":
         taxonomy = json.load(f)
     with open('./So-B-IT_categories.json') as f:
         word_categories = json.load(f)
-    
+
     # Load the 'validation' split of FairFace with the '0.25' config (tighter face crop)
     # in the '1.25' config the crop is expanded by a factor of 1.25 rel. to the face bbox
     dataset = load_dataset('HuggingFaceM4/FairFace', data_dir='0.25', split='validation')
@@ -219,11 +219,11 @@ if __name__ == "__main__":
 
     model.eval()
     model.to(device)
-    
+
     # Precompute image and text embeddings
     image_embeddings = compute_image_embeddings(dataset, model, preprocess, device)
     text_embeddings = compute_text_embeddings([word for category in taxonomy.values() for word in category], word_categories, model, tokenizer, device)
-    
+
     # Evaluate normalized entropy
     race_results, gender_results, similarities = evaluate_normalized_entropy(image_embeddings, text_embeddings, dataset)
     for category in taxonomy.keys():
@@ -233,5 +233,5 @@ if __name__ == "__main__":
     # Evaluate C-ASC
     casc_results = evaluate_CASC(similarities, dataset, taxonomy)
     print_extreme_CASC(casc_results)
-    
+
 
