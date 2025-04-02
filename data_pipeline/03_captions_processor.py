@@ -138,6 +138,10 @@ if __name__ == "__main__":
     json_files = sorted(glob.glob(args.input+'/*json'))
     logs = {}
     for json_file in json_files:
+        # Skip processing if output file already exists
+        if os.path.exists(os.path.join(args.output, os.path.basename(json_file))):
+            print(f"Skipping {json_file}, already processed.")
+            continue
         log = process_json(json_file, args.output, args.num_threads)
         logs[json_file] = log
 
