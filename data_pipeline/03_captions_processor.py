@@ -7,39 +7,6 @@ import argparse
 from tqdm import tqdm
 from concurrent.futures import ThreadPoolExecutor, as_completed, TimeoutError
 
-import spacy
-from spacy.language import Language
-from spacy_langdetect import LanguageDetector
-
-# Register the language_detector factory so spaCy knows about it
-@Language.factory("language_detector")
-def get_lang_detector(nlp, name):
-    return LanguageDetector()
-
-# Load the English model
-nlp = spacy.load("en_core_web_sm")
-
-# Add the language detector component to the pipeline
-if "language_detector" not in nlp.pipe_names:
-    nlp.add_pipe("language_detector", last=True)
-
-def is_english(sentence):
-    """
-    Returns True if the sentence is detected as English.
-    """
-    doc = nlp(sentence)
-    # The language detection returns a dict like {'language': 'en', 'score': 0.999...}
-    lang_result = doc._.language
-    return lang_result["language"] == "en"
-
-def contains_person(sentence):
-    """
-    Returns True if the sentence contains at least one PERSON named entity.
-    """
-    doc = nlp(sentence)
-    return any(ent.label_ == "PERSON" for ent in doc.ents)
-
-
 # Parse command-line arguments
 parser = argparse.ArgumentParser(description="Process prompts for multiple ollama model instances.")
 parser.add_argument("--input", type=str, required=True, help="Path to folder with JSON files with captions to be processed.")
@@ -117,20 +84,11 @@ def process_json(json_path, output_folder, num_threads):
             futures = {}
             for filename in data.keys():
                 log_info['total'] += 1
-                prompt = data[filename].replace("\n", " ")
-                if not is_english(prompt):
-                    log_info['no_english'] += 1
-                    update_progress(progress_bar, start_time)
-                    continue
-                # TODO handle samples with PERSON entities differently?
-                #if contains_person(prompt):
-                #    log_info['has_ne'] += 1
-                    # update_progress(progress_bar, start_time)
-                    # continue
+                prompt = data[filename].replace("\n", " ").replace("\"","")
 
                 ethnicity = random.choice(ethnicities)
                 gender = random.choice(genders)
-                prompt = f'{prompt} @ {ethnicity} {gender}'
+                prompt = f'sentence: "{prompt}" group:"{ethnicity} {gender}"'
                 outputs[filename] = prompt
                 log_info['llm_processed'] += 1
                 url = urls[len(futures) % len(urls)]  # Round-robin URL selection
