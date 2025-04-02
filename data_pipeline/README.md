@@ -1,6 +1,6 @@
 A more efficient data pipeline:
 
-1) (in-cluster) untar all shards into a temporary folder (see e.g. 01_extract_shards_small.sh)
+1) (in-cluster) untar all shards into a temporary folder (see e.g. 01_extract_shards.sh)
 2) (in-cluster) filter all samples with at least 1 face detected 
 3) (remotely) filter samples with English caption and process captions with an LLM to produce t2i prompts. 
 4) (in-cluster) generate images with prompts from step 3 and edit/modify captions directly in the temp folder if needed.
@@ -23,10 +23,10 @@ Approx time per step/scale:
 -----------------------
 
 ## 1) untar all shards into a temporary folder
-script `01_extract_shards_small.sh` extracts files from `SRC_DIR="/gpfs/scratch/ehpc42/datasets/datacomp/small_filtered/shards"`
-into `TARGET_DIR="/gpfs/scratch/ehpc42/datasets/datacomp/small_hybrid/tmp"`
+script `01_extract_shards.sh` extracts files from `SRC_DIR="/gpfs/scratch/ehpc42/datasets/datacomp/large_filtered/shards"`
+into `TARGET_DIR="/gpfs/scratch/ehpc42/datasets/datacomp/large_hybrid/tmp"`
 
-script `01_extract_shards_small.sh` uses xargs for parallel processing.
+script `01_extract_shards.sh` uses xargs for parallel processing.
 
 ## 2) filter all samples with at least 1 face detected 
 script `02_filter_noface.sh` reads json files from `/gpfs/scratch/ehpc42/datasets/datacomp/small_hybrid/tmp` and process then with python script `filter_noface.py`. It creates a json file per shard (e.g. json file prompts/00000000.json correspond to captions in 00000000.tar shard) in `/gpfs/scratch/ehpc42/datasets/datacomp/small_hybrid/captions`, each file has a dictionary with filenames as keys and captions as values:
