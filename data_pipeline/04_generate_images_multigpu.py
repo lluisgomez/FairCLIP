@@ -6,7 +6,7 @@ import torch
 import time
 import random
 import diffusers
-from diffusers import AutoPipelineForText2Image
+from diffusers import FluxPipeline
 from PIL import Image
 from multiprocessing import Process
 import multiprocessing
@@ -18,9 +18,8 @@ def generate_images(gpu_id, input_files, output_dir, batch_size=32):
     torch.cuda.set_device(gpu_id)
     
     # Load the pipeline and send it to the designated GPU
-    model_path = "/gpfs/projects/ehpc42/sdxlturbo/models/models--stabilityai--sdxl-turbo/snapshots/71153311d3dbb46851df1931d3ca6e939de83304/"
-    pipe = AutoPipelineForText2Image.from_pretrained(model_path, torch_dtype=torch.float16, variant="fp16")
-    #pipe = AutoPipelineForText2Image.from_pretrained("stabilityai/sdxl-turbo", torch_dtype=torch.float16, variant="fp16")
+    model_path = "/gpfs/projects/ehpc42/flux-schnell/models/models--black-forest-labs--FLUX.1-schnell/snapshots/741f7c3ce8b383c54771c7003378a50191e9efe9/"
+    pipe = FluxPipeline.from_pretrained(model_path, torch_dtype=torch.bfloat16)
     pipe.set_progress_bar_config(disable=True)
     pipe.to(f"cuda:{gpu_id}")
 
@@ -50,7 +49,8 @@ def generate_images(gpu_id, input_files, output_dir, batch_size=32):
                 num_inference_steps=2,
                 guidance_scale=0.0,
                 generator=[torch.manual_seed(seed) for seed in seeds],
-                width=256, height=256
+                width=384, height=384,
+                max_sequence_length=256
             ).images
 
             batch_time = time.time() - start_time
@@ -64,7 +64,7 @@ def generate_images(gpu_id, input_files, output_dir, batch_size=32):
                 if not '@' in caption:
                     with open(os.path.join(file_output_dir, img_key.replace('json','txt')), 'w') as tf:
                         tf.write(caption)
-                    with open(os.path.join(file_output_dir, img_key)) as jf:
+                    with open(os.path.join(file_output_dir.replace('edits','tmp'), img_key)) as jf:
                         jdata = json.load(jf)
                     jdata['caption'] = caption
                     with open(os.path.join(file_output_dir, img_key), 'w') as jf:
@@ -85,17 +85,16 @@ if __name__ == "__main__":
     diffusers.utils.logging.set_verbosity(diffusers.logging.CRITICAL)
 
     parser = argparse.ArgumentParser(description="Generate images with multi-GPU data parallelism")
-    parser.add_argument('--input_files', type=str, required=True, help='Paths to the JSON input files')
+    parser.add_argument('--input_files', type=str, nargs='+', required=True, help='Paths to the JSON input files')
     parser.add_argument('--output_dir', type=str, required=True, help='Directory to save generated images')
     parser.add_argument('--batch_size', type=int, default=32, help='Batch size for inference')
     parser.add_argument('--num_gpus', type=int, default=4, help='Number of GPUs to use')
     args = parser.parse_args()
 
-    input_files = glob.glob(args.input_files+'/*json')
     
     # Split the input files evenly among the available GPUs
     gpu_inputs = [[] for _ in range(args.num_gpus)]
-    for idx, input_file in enumerate(input_files):
+    for idx, input_file in enumerate(args.input_files):
         gpu_inputs[idx % args.num_gpus].append(input_file)
     
     processes = []
