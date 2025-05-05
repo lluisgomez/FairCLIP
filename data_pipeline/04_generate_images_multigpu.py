@@ -55,20 +55,19 @@ def generate_images(gpu_id, input_files, output_dir, batch_size=32):
 
             batch_time = time.time() - start_time
 
-            # save images directly in tmp file
+            # save images 
             for img_key, img in zip(batch_keys, images):
                 img.save(os.path.join(file_output_dir, img_key.replace('json','jpg')), format="JPEG", quality=90)
 
-            # edit captions (if necessary) in tmp file
-            for caption in batch_captions:
-                if not '@' in caption:
-                    with open(os.path.join(file_output_dir, img_key.replace('json','txt')), 'w') as tf:
-                        tf.write(caption)
-                    with open(os.path.join(file_output_dir.replace('edits','tmp'), img_key)) as jf:
-                        jdata = json.load(jf)
-                    jdata['caption'] = caption
-                    with open(os.path.join(file_output_dir, img_key), 'w') as jf:
-                        jdata = json.dump(jdata, jf)
+            # edit captions 
+            for img_key,caption in zip(batch_keys,batch_captions):
+                with open(os.path.join(file_output_dir, img_key.replace('json','txt')), 'w') as tf:
+                    tf.write(caption)
+                with open(os.path.join(file_output_dir.replace('edits','tmp'), img_key)) as jf:
+                    jdata = json.load(jf)
+                jdata['caption'] = caption
+                with open(os.path.join(file_output_dir, img_key), 'w') as jf:
+                    jdata = json.dump(jdata, jf)
 
 
             total_images += len(images)
