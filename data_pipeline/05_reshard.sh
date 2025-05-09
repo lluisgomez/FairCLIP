@@ -32,7 +32,7 @@ for ((i=start; i<=end; i+=batch_size)); do
         base=$(printf "%08d" "$j")
         echo "  -> Starting $base"
 
-        python /gpfs/projects/ehpc42/code/reshard.py \
+        python /gpfs/projects/ehpc42/code/05_reshard.py \
             --input "$SRC_DIR/$base.tar" \
             --output "$DEST_DIR/$base.tar" \
             --edits "$EDIT_DIR/$base" &
