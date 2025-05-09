@@ -1,35 +1,18 @@
 A more efficient data pipeline:
 
-1) (in-cluster) untar all shards into a temporary folder (see e.g. 01_extract_shards.sh)
-2) (in-cluster) filter all samples with at least 1 face detected 
-3) (remotely) filter samples with English caption and process captions with an LLM to produce t2i prompts. 
-4) (in-cluster) generate images with prompts from step 3 and edit/modify captions directly in the temp folder if needed.
-5) (in-cluster) tar all shards from the temp folder
+1) filter all samples with at least 1 face detected.
+2) filter samples with English caption and process captions with an LLM to produce t2i prompts. 
+3) generate images with prompts from step 3 and modify the txt and json files accordingly.
+4) reshard all .tar shards files using the generated images and modified txt and json files.
 
 -----------------------
 
-Approx time per step/scale:
 
-| Step | Samples/s | Time (small) | Time (medium) | Time (large) |
-|------|-----------|--------------|---------------|--------------|
-| 1    | 500       | 2.00 h       |               | 48h          |
-| 2    | 3500      | 0.25 h       |               |              |
-| 3    | 50        | 6.00 h       |               |              |
-| 4    | 128       | 1.00 h       |               |              |
-| 5    | 500       | 2.00 h       |               |              |
-|------|-----------|--------------|---------------|--------------|
-|TOTAL |           | 11.25 h      |   ~112.50 h   |  ~1125.00 h  |
+## 1) filter all samples with at least 1 face detected 
+script `01_filter_noface.sh` calls 01_filter_noface.py for each .tar file in `SRC_DIR="/gpfs/scratch/ehpc42/datasets/datacomp/large_filtered/shards"` a json file will be created in `TARGET_DIR="/gpfs/scratch/ehpc42/datasets/datacomp/large_hybrid/captions"` 
 
------------------------
 
-## 1) untar all shards into a temporary folder
-script `01_extract_shards.sh` extracts files from `SRC_DIR="/gpfs/scratch/ehpc42/datasets/datacomp/large_filtered/shards"`
-into `TARGET_DIR="/gpfs/scratch/ehpc42/datasets/datacomp/large_hybrid/tmp"`
-
-script `01_extract_shards.sh` uses xargs for parallel processing.
-
-## 2) filter all samples with at least 1 face detected 
-script `02_filter_noface.sh` reads json files from `/gpfs/scratch/ehpc42/datasets/datacomp/small_hybrid/tmp` and process then with python script `filter_noface.py`. It creates a json file per shard (e.g. json file prompts/00000000.json correspond to captions in 00000000.tar shard) in `/gpfs/scratch/ehpc42/datasets/datacomp/small_hybrid/captions`, each file has a dictionary with filenames as keys and captions as values:
+script `01_filter_noface.py` reads the tar file and creates a json file per shard (e.g. json file prompts/00000000.json correspond to captions in 00000000.tar shard) in `/gpfs/scratch/ehpc42/datasets/datacomp/small_hybrid/captions`, each file has a dictionary with filenames as keys and captions as values:
 
 ```
 {
@@ -39,10 +22,13 @@ script `02_filter_noface.sh` reads json files from `/gpfs/scratch/ehpc42/dataset
 ...
 }
 ```
-## 3) filter samples with English caption and process captions with an LLM to produce t2i prompts.
-script `03_captions_processor.py` read json files from `/gpfs/scratch/ehpc42/datasets/datacomp/small_hybrid/captions` and creates files with same format in `/gpfs/scratch/ehpc42/datasets/datacomp/small_hybrid/prompts`. This files (one per shard) sonatain the modified captions that will be used to generate images in next step.
 
-the script `03_captions_processor.py' assumes you have several ollama instances serving in different ports. you can configure the ollama ports and model via arguments:
+also stores the json files of selected samples in /gpfs/scratch/ehpc42/datasets/datacomp/large_hybrid/edits
+
+## 2) filter samples with English caption and process captions with an LLM to produce t2i prompts.
+script `02_captions_processor.py` read json files from `/gpfs/scratch/ehpc42/datasets/datacomp/small_hybrid/captions` and creates files with same format in `/gpfs/scratch/ehpc42/datasets/datacomp/small_hybrid/prompts`. This files (one per shard) sonatain the modified captions that will be used to generate images in next step.
+
+the script `02_captions_processor.py' assumes you have several ollama instances serving in different ports. you can configure the ollama ports and model via arguments:
 
 * --input "Path to folder with shard tar files."
 * --output "Path to output folder where JSON files with results will be saved."
@@ -54,20 +40,14 @@ the script `03_captions_processor.py' assumes you have several ollama instances 
 Calling the script:
 
 ```bash
-python3 captions_processor.py --input /path/to/captions/ --output /path/to/prompts
+python3 02_captions_processor.py --input /path/to/captions/ --output /path/to/prompts
 ```
 
 generates a json file for each shard (e.g. json file prompts/00000000.json correspond to captions in 00000000.tar shard). Each json file is a dictionary with caption ID as key and the processed caption as value.
 
-## 4) generate images with prompts from previous step
-script `../slurm_job_scripts/generate_images_small.sh` launches a SLURM srun command that calls python script `04_generate_images_multigpu.py`. It generates images using prompts from `/gpfs/scratch/ehpc42/datasets/datacomp/small_hybrid/prompts` and saves generated images and edited json/txt files into a clean directory `/gpfs/scratch/ehpc42/datasets/datacomp/small_hybrid/edits`
+## 3) generate images with prompts from previous step
+slurm script `03_generate_images.sh` launches a SLURM srun command that calls python script `03_generate_images_multigpu.py`. It generates images using prompts from `/gpfs/scratch/ehpc42/datasets/datacomp/large_hybrid/prompts` and saves generated images and edited json/txt files into directory `/gpfs/scratch/ehpc42/datasets/datacomp/large_hybrid/edits`
 
-**TODO**: (observations after manual inspection of generated images in small scale) 
 
- - SDXL-Turbo generates distorted/deformed faces. Consider FLUX-schnell (384x384 / 2steps) for better quality.
- - Take care of Named Entities. There are a lot (majority of images)
- - Lots of false positives in DataComp face detection annotations.
- - Caution: there might be a bug in step 3 that occasionally assigns wrong captions. E.g. "uid": "ea25e96a4ade488d756164c8def5a7c5" in 00000000.tar (small scale)
-
-## 5) rebuild shards with generated data
-script `05_reshard_small.sh` calls python `reshard.py` to create tar files faster by using sequential readings from the original tar files in `/gpfs/scratch/ehpc42/datasets/datacomp/small_filtered/shards`, updating edited samples from `/gpfs/scratch/ehpc42/datasets/datacomp/small_hybrid/edits`. This produces a new set of shards with the hybrid dataset in `/gpfs/scratch/ehpc42/datasets/datacomp/small_hybrid/shards`
+## 4) rebuild shards with generated data
+script `04_reshard.sh` calls python `04_reshard.py` to create tar files faster by using sequential readings from the original tar files in `/gpfs/scratch/ehpc42/datasets/datacomp/large_filtered/shards`, updating edited samples from `/gpfs/scratch/ehpc42/datasets/datacomp/large_hybrid/edits`. This produces a new set of shards with the hybrid dataset in `/gpfs/scratch/ehpc42/datasets/datacomp/large_hybrid/shards`

@@ -63,7 +63,7 @@ def generate_images(gpu_id, input_files, output_dir, batch_size=32):
             for img_key,caption in zip(batch_keys,batch_captions):
                 with open(os.path.join(file_output_dir, img_key.replace('json','txt')), 'w') as tf:
                     tf.write(caption)
-                with open(os.path.join(file_output_dir.replace('edits','tmp'), img_key)) as jf:
+                with open(os.path.join(file_output_dir, img_key)) as jf:
                     jdata = json.load(jf)
                 jdata['caption'] = caption
                 with open(os.path.join(file_output_dir, img_key), 'w') as jf:
