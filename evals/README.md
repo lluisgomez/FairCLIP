@@ -28,6 +28,7 @@ For zero-shot evaluation we use DataComp evaluation whch is based on CLIP_benchm
 ```
 conda activate datacomp
 cd datacomp
+ulimit -n 4096  # Increase open file limit to avoid "Too many open files" errors during evaluation
 python evaluate.py --train_output_dir /gpfs_projects/jobs_output/datacomp-scale-small-filtered-seed0/ --data_dir /gpfs_projects/datasets/datacomp/eval/
 ```
 
