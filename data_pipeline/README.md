@@ -1,4 +1,7 @@
-A more efficient data pipeline:
+FairCLIP data pipeline:
+
+![alt text](./FairCLIP_data_pipeline.png)
+
 
 1) filter all samples with at least 1 face detected.
 2) filter samples with English caption and process captions with an LLM to produce t2i prompts. 
