@@ -21,8 +21,10 @@ The metrics implementations of Kong et al. and Hamidieh et al. are based on desc
 
 ### DataComp (CLIP benchmark) evals
 
-Apart from fairness metrics, we also need standard retrieval performance metrics (and zero-shot evals) to ensure fairness improvements don't compromise overall accuracy/utility. 
+Apart from fairness metrics above, we also need standard retrieval performance metrics (and zero-shot evals) to ensure fairness improvements don't compromise overall accuracy/utility. 
 Scripts `eval_coco_neutral.py` and `eval_flickr_neutral.py` also report Recall@K on COCO and Flickr30K datasets.
+
+
 For zero-shot evaluation we use DataComp evaluation whch is based on CLIP_benchmark:
 
 ```
@@ -31,6 +33,10 @@ cd datacomp
 ulimit -n 4096  # Increase open file limit to avoid "Too many open files" errors during evaluation
 python evaluate.py --train_output_dir /gpfs_projects/jobs_output/datacomp-scale-small-filtered-seed0/ --data_dir /gpfs_projects/datasets/datacomp/eval/
 ```
+
+This command evaluates CLIP on 40 datasets, including ImageNet1K, MSCOCO, and Flickr. It also performs fairness evals on FairFace and UTKFace, similar to the original OpenAI CLIP paper (section 7.1. Bias).
+
+
 
 ---------------------
 
