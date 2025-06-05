@@ -56,7 +56,7 @@ ViT-B-16 (ours CLIP 40%)               | 393M | 13B | 0.64 | 0.33  | 0.48 | 0.57
 ---------------------
 
 Baseline Fairness evals
-
-| Model   | Dataset size | Samples Seen | FairFace acc_race_avg | FairFace acc_gender_avg | FairFace acc_age_avg | FairFace toxicity_crime_avg | FairFace toxicity_nonhuman_avg | UTKFace acc_race_avg | UTKFace acc_gender_avg | UTKFace acc_age_avg | UTKFace toxicity_crime_avg | UTKFace toxicity_nonhuman_avg |
+| Model   | Training Data | Samples Seen | FairFace acc_race_avg ▲ | FairFace acc_gender_avg ▲ | FairFace acc_age_avg ▲ | FairFace toxicity_crime_avg ▼ | FairFace toxicity_nonhuman_avg ▼ | UTKFace acc_race_avg ▲ | UTKFace acc_gender_avg ▲ | UTKFace acc_age_avg ▲ | UTKFace toxicity_crime_avg ▼ | UTKFace toxicity_nonhuman_avg ▼ |
 |---------|----------------|---------------|------------------------|--------------------------|-----------------------|-----------------------------|-------------------------------|-----------------------|---------------------------|----------------------|-----------------------------|-------------------------------|
 | ViT-B-16 (ours CLIP 40%)| 393M   | 13B          | 0.8320                 | 0.8727                   | 0.3709                | 0.0334                      | 0.0006                        | 0.7075                | 0.9171                    | 0.3627               | 0.1383                      | 0.0086                        |
+| ViT-B-16 (ours CLIP 40%)| 393M   | 1.3B          | 0.8300                    | 0.8222                      | 0.2337                   | 0.1535                        | 0.0011                           | 0.6997                   | 0.8819                      | 0.3305                    | 0.1440                        | 0.0010                           |
