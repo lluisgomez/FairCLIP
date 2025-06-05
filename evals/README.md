@@ -34,7 +34,7 @@ ulimit -n 4096  # Increase open file limit to avoid "Too many open files" errors
 python evaluate.py --train_output_dir /gpfs_projects/jobs_output/datacomp-scale-small-filtered-seed0/ --data_dir /gpfs_projects/datasets/datacomp/eval/
 ```
 
-This command evaluates CLIP on 40 datasets, including ImageNet1K, MSCOCO, and Flickr. It also performs fairness evals on FairFace and UTKFace, similar to the original OpenAI CLIP paper (section 7.1. Bias).
+This command evaluates CLIP on 40 datasets, including ImageNet1K, MSCOCO, and Flickr. It also performs **fairness evals on FairFace and UTKFace**, similar to the original OpenAI CLIP paper (section 7.1. Bias).
 
 
 
@@ -51,3 +51,12 @@ ViT-B-16 (Baseline CLIP 30%)           | 385M | 1.3B | 0.57 | 0.29  | 0.44 | 0.5
 ViT-B-16 (ours CLIP 40%)               | 393M | 1.3B | 0.56 | 0.27  | 0.43 | 0.50 | 0.67  |
  ------------ | --- | --- | --- | --- | --- | --- | --- |
 ViT-B-16 (ours CLIP 40%)               | 393M | 13B | 0.64 | 0.33  | 0.48 | 0.57 | 0.74  |
+
+
+---------------------
+
+Baseline Fairness evals
+
+| Model   | Dataset size | Samples Seen | FairFace acc_race_avg | FairFace acc_gender_avg | FairFace acc_age_avg | FairFace toxicity_crime_avg | FairFace toxicity_nonhuman_avg | UTKFace acc_race_avg | UTKFace acc_gender_avg | UTKFace acc_age_avg | UTKFace toxicity_crime_avg | UTKFace toxicity_nonhuman_avg |
+|---------|----------------|---------------|------------------------|--------------------------|-----------------------|-----------------------------|-------------------------------|-----------------------|---------------------------|----------------------|-----------------------------|-------------------------------|
+| ViT-B-16 (ours CLIP 40%)| 393M   | 13B          | 0.8320                 | 0.8727                   | 0.3709                | 0.0334                      | 0.0006                        | 0.7075                | 0.9171                    | 0.3627               | 0.1383                      | 0.0086                        |
