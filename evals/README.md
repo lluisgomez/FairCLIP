@@ -40,7 +40,7 @@ This command evaluates CLIP on 40 datasets, including ImageNet1K, MSCOCO, and Fl
 
 ---------------------
 
-Initial results on CLIP benchmark datasets for ViT-B-16 on DataComp large scale data. Our filtered data (CLIP 40%) yields slightly lower numbers than the CLIP 30% baseline (commonpool_l_clip_s1b_b8k) because initial pool is different (~20% of DataComp-large is missing).
+Initial results on CLIP benchmark datasets for ViT-B-16 on DataComp large scale data. Our filtered data (CLIP 40%) yields slightly lower numbers than the CLIP 30% baseline (commonpool_l_clip_s1b_b8k) because initial pool is different (~20% of DataComp-large is missing). Training for 32 epochs (1.3B samples seen), as in the original CLIP paper, significantly improves our results.
 
 Model         | Dataset size | Samples seen | ImageNet1K Acc. | COCO t2i R@1 | COCO i2t R@1 | Flickr30K t2i R@1 | Flickr30K i2t R@1 |
  ------------ | --- | --- | --- | --- | --- | --- | --- |
@@ -49,3 +49,5 @@ ViT-B-16 (DataComp CLIP + Image-based) | 140M | 1.3B | 0.63 | 0.32  | 0.48 | 0.5
  ------------ | --- | --- | --- | --- | --- | --- | --- |
 ViT-B-16 (Baseline CLIP 30%)           | 385M | 1.3B | 0.57 | 0.29  | 0.44 | 0.51 | 0.68  |
 ViT-B-16 (ours CLIP 40%)               | 393M | 1.3B | 0.56 | 0.27  | 0.43 | 0.50 | 0.67  |
+ ------------ | --- | --- | --- | --- | --- | --- | --- |
+ViT-B-16 (ours CLIP 40%)               | 393M | 13B | 0.64 | 0.33  | 0.48 | 0.57 | 0.74  |
