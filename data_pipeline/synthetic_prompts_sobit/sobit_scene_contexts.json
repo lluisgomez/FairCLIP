@@ -1,0 +1,65 @@
+{
+  "appearance": [
+    "in a fashion show",
+    "in a mirror",
+    "posing for a photo",
+    "walking on the street",
+    "in a beauty salon"
+  ],
+  "behavorial": [
+    "at a party",
+    "during a conversation",
+    "in a classroom",
+    "at work",
+    "in a social setting"
+  ],
+  "education and wealth": [
+    "in a university campus",
+    "in a public school",
+    "in a luxury office",
+    "on the street",
+    "at a job interview"
+  ],
+  "criminal justice": [
+    "in a courtroom",
+    "during an arrest",
+    "in a police station",
+    "at a prison",
+    "in front of a police car"
+  ],
+  "healthcare": [
+    "in a hospital room",
+    "talking to a doctor",
+    "lying in a hospital bed",
+    "waiting in a clinic",
+    "in a pharmacy"
+  ],
+  "portrayal in media": [
+    "on a TV show",
+    "in a movie scene",
+    "posing for a magazine",
+    "in a news broadcast",
+    "on a reality show"
+  ],
+  "political": [
+    "at a protest",
+    "giving a speech",
+    "in a political debate",
+    "voting",
+    "on a campaign trail"
+  ],
+  "religion": [
+    "in a place of worship",
+    "during a religious ceremony",
+    "praying",
+    "reading a religious text",
+    "celebrating a religious holiday"
+  ],
+  "occupation": [
+    "at work",
+    "in a workplace",
+    "in uniform",
+    "in a professional setting",
+    "performing a job task"
+  ]
+}
