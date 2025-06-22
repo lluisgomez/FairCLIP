@@ -198,6 +198,17 @@ if __name__ == "__main__":
     with open('./So-B-IT_categories.json') as f:
         word_categories = json.load(f)
 
+    if args.train_output_dir != None:
+        if os.path.exists(os.path.join(args.train_output_dir, 'eval_results_So-B-IT.json')):
+            print('Loading precomputed results from eval_results_So-B-IT.json')
+            with open(os.path.join(args.train_output_dir, 'eval_results_So-B-IT.json')) as f:
+                results = json.load(f)
+            for category in taxonomy.keys():
+                print(f"Category: {category}, Race Bias (Normalized Entropy): {results['race_results'][category]:.3f}")
+                print(f"Category: {category}, Gender Bias (Normalized Entropy): {results['gender_results'][category]:.3f}")
+            print_extreme_CASC(results['casc_results'])
+            quit()
+
     # Load the 'validation' split of FairFace with the '0.25' config (tighter face crop)
     # in the '1.25' config the crop is expanded by a factor of 1.25 rel. to the face bbox
     dataset = load_dataset('HuggingFaceM4/FairFace', data_dir='0.25', split='validation')
@@ -234,4 +245,7 @@ if __name__ == "__main__":
     casc_results = evaluate_CASC(similarities, dataset, taxonomy)
     print_extreme_CASC(casc_results)
 
-
+    if args.train_output_dir != None:
+        results = {'race_results': race_results, 'gender_results': gender_results, 'casc_results': casc_results}
+        with open(os.path.join(args.train_output_dir, 'eval_results_So-B-IT.json'), 'w') as f:
+            json.dump(results,f)
