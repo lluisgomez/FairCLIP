@@ -218,8 +218,8 @@ if __name__ == "__main__":
 
     # Load CLIP model
     if args.train_output_dir == None:
-        model, _, preprocess = open_clip.create_model_and_transforms('ViT-B-32-quickgelu', pretrained='openai')
-        tokenizer = open_clip.get_tokenizer('ViT-B-32')
+        model, _, preprocess = open_clip.create_model_and_transforms('ViT-B-16-quickgelu', pretrained='openai')
+        tokenizer = open_clip.get_tokenizer('ViT-B-16')
     else:
         # Read training information
         train_info_filename = os.path.join(args.train_output_dir, "info.pkl")
